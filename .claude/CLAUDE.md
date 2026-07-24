@@ -26,6 +26,13 @@ tipjareth/
 IMPORTANT: Never add @tanstack/* packages, wagmi, or RainbowKit (supply-chain policy).
 Web3 is ethers v6 only. API fetching is plain `fetch` via custom hooks in `frontend/src/hooks/api/`.
 
+## No Dark Patterns
+
+IMPORTANT: All fees shown to the user BEFORE they sign; tipCreator takes `acceptedMaxFeeBps`
+so a fee change can never silently apply. The "anonymous" toggle must state that the wallet
+address remains public on-chain. No pre-checked options, no confirmshaming, no fake urgency,
+no hidden costs anywhere in the UI.
+
 ## Smart Contracts
 
 **Don't:** Use `tx.origin`, ignore return values, or use require strings

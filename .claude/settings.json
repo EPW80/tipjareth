@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git init *)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "Bash(npx hardhat *)"
     ],
     "additionalDirectories": [
       "/home/erikwilliams/dev/tipjareth"

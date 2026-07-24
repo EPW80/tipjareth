@@ -27,7 +27,10 @@ All of this lives in `frontend/src/hooks/web3/WalletProvider.tsx` — components
 import { Contract, parseEther } from "ethers";
 
 const tipJar = new Contract(address, abi, signer);
-const tx = await tipJar.tipCreator(creatorAddress, message, isAnonymous, {
+// acceptedMaxFeeBps = the fee the UI displayed; the tx reverts if the
+// platform fee was raised after display (no-dark-patterns rule)
+const displayedFeeBps = await tipJar.platformFeeBps();
+const tx = await tipJar.tipCreator(creatorAddress, message, isAnonymous, displayedFeeBps, {
   value: parseEther(amountEth),
 });
 const receipt = await tx.wait();          // update UI only after this resolves
