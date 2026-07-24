@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+build/
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+contracts/coverage/
+contracts/coverage.json
+
+# Generated contract ABI copies
+frontend/src/config/generated/
+
+# CLAUDE.md local overrides
+.claude/local.md
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+.idea/
+*.swp

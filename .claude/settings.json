@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git init *)"
+      "Bash(git init *)",
+      "Bash(git branch *)"
     ],
     "additionalDirectories": [
       "/home/erikwilliams/dev/tipjareth"
