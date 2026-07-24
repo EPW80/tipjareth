@@ -3,7 +3,13 @@
     "allow": [
       "Bash(git init *)",
       "Bash(git branch *)",
-      "Bash(npx hardhat *)"
+      "Bash(npx hardhat *)",
+      "Bash(nc -z localhost 8545)",
+      "Bash(break)",
+      "Bash(npx tsx *)",
+      "Bash(echo \"health: $\\(curl -s localhost:5000/api/health\\)\")",
+      "Bash(node /tmp/claude-1000/-home-erikwilliams-dev-tipjareth/127d89c4-78ac-4b27-8648-6f8dcbdf38c8/scratchpad/e2e.mjs)",
+      "Bash(node check-tmp.mjs)"
     ],
     "additionalDirectories": [
       "/home/erikwilliams/dev/tipjareth"
