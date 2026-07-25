@@ -9,7 +9,18 @@
       "Bash(npx tsx *)",
       "Bash(echo \"health: $\\(curl -s localhost:5000/api/health\\)\")",
       "Bash(node /tmp/claude-1000/-home-erikwilliams-dev-tipjareth/127d89c4-78ac-4b27-8648-6f8dcbdf38c8/scratchpad/e2e.mjs)",
-      "Bash(node check-tmp.mjs)"
+      "Bash(node check-tmp.mjs)",
+      "Bash(curl -s -m 5 http://localhost:5000/api/health)",
+      "Bash(curl -s -m 5 http://localhost:5000/api/creators)",
+      "Bash(curl -s -m 5 -o /dev/null -w '%{http_code}\\\\n' http://localhost:5173/)",
+      "Bash(command -v chromium-cli chromium google-chrome)",
+      "Bash(/home/erikwilliams/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell --headless --disable-gpu --no-sandbox --virtual-time-budget=8000 --window-size=1280,900 --screenshot=home.png http://localhost:5173/)",
+      "Bash(git -C /home/erikwilliams/dev/tipjareth status --short)",
+      "Bash(git -C /home/erikwilliams/dev/tipjareth diff --stat)",
+      "Bash(git -C /home/erikwilliams/dev/tipjareth diff)",
+      "Bash(git -C /home/erikwilliams/dev/tipjareth log --oneline main..HEAD)",
+      "Bash(git -C /home/erikwilliams/dev/tipjareth branch -a)",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "/home/erikwilliams/dev/tipjareth"

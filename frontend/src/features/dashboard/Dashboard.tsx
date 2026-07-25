@@ -14,7 +14,9 @@ export function Dashboard() {
   if (!account) {
     return (
       <div className="text-center">
-        <p className="mb-4 text-slate-600">Connect your wallet to see your creator dashboard.</p>
+        <p className="mb-4 text-slate-600">
+          Connect your wallet to see your creator dashboard.
+        </p>
         <button
           onClick={() => connect()}
           className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
@@ -34,14 +36,17 @@ export function Dashboard() {
 
 function DashboardContent({ account }: { account: string }) {
   const { creator, refresh } = useCreatorOnChain(account);
-  const { data: stats } = useApi<CreatorStats>(`/api/creators/${account}/stats`);
+  const { data: stats } = useApi<CreatorStats>(
+    `/api/creators/${account}/stats`,
+  );
   const { withdraw, state } = useWithdraw();
   const [error, setError] = useState<string | null>(null);
 
   if (creator && !creator.isActive) {
     return (
       <p className="text-slate-600">
-        This wallet isn't registered as a creator yet. Head to "Become a creator" to register.
+        This wallet isn't registered as a creator yet. Head to "Become a
+        creator" to register.
       </p>
     );
   }
@@ -79,7 +84,9 @@ function DashboardContent({ account }: { account: string }) {
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-xs text-slate-500">Unique tippers</p>
-          <p className="text-xl font-semibold">{stats?.uniqueTipperCount ?? "…"}</p>
+          <p className="text-xl font-semibold">
+            {stats?.uniqueTipperCount ?? "…"}
+          </p>
         </div>
       </div>
 
@@ -92,8 +99,8 @@ function DashboardContent({ account }: { account: string }) {
           {state === "signing"
             ? "Confirm in wallet…"
             : state === "mining"
-              ? "Withdrawing…"
-              : "Withdraw balance"}
+            ? "Withdrawing…"
+            : "Withdraw balance"}
         </button>
         {error && (
           <p className="mt-2 text-sm text-red-600" role="alert">

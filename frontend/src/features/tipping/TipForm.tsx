@@ -30,17 +30,18 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
     amountWei = null;
   }
 
-  const belowMin = amountWei !== null && minTipWei !== null && amountWei < minTipWei;
+  const belowMin =
+    amountWei !== null && minTipWei !== null && amountWei < minTipWei;
   const feeWei =
     amountWei !== null && feeBps !== null ? (amountWei * feeBps) / BPS : null;
 
   const validationError = !amount
     ? "Enter an amount"
     : amountWei === null
-      ? "Invalid amount"
-      : belowMin
-        ? `Minimum tip is ${formatEther(minTipWei!)} ETH`
-        : null;
+    ? "Invalid amount"
+    : belowMin
+    ? `Minimum tip is ${formatEther(minTipWei!)} ETH`
+    : null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -77,7 +78,10 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
   const busy = state === "signing" || state === "mining";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 rounded-lg border border-slate-200 bg-white p-4"
+    >
       <h2 className="font-semibold">Tip @{creatorName}</h2>
 
       <label className="block text-sm">
@@ -114,15 +118,18 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
         <span>
           Don't show my name with this tip
           <span className="block text-xs text-slate-500">
-            Hides your address in TipFlow only — your wallet address remains publicly
-            visible on the blockchain.
+            Hides your address in TipFlow only — your wallet address remains
+            publicly visible on the blockchain.
           </span>
         </span>
       </label>
 
       {/* fee transparency: full breakdown before the user signs */}
       {amountWei !== null && feeWei !== null && !belowMin && (
-        <div className="rounded bg-slate-50 p-3 text-xs text-slate-600" data-testid="fee-breakdown">
+        <div
+          className="rounded bg-slate-50 p-3 text-xs text-slate-600"
+          data-testid="fee-breakdown"
+        >
           <div className="flex justify-between">
             <span>Platform fee ({(Number(feeBps) / 100).toFixed(2)}%)</span>
             <span>{formatEther(feeWei)} ETH</span>
@@ -150,7 +157,9 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
         </p>
       )}
       {wrongNetwork && (
-        <p className="text-sm text-amber-700">Switch to the local Hardhat network to tip.</p>
+        <p className="text-sm text-amber-700">
+          Switch to the local Hardhat network to tip.
+        </p>
       )}
 
       <button
@@ -161,8 +170,8 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
         {state === "signing"
           ? "Confirm in wallet…"
           : state === "mining"
-            ? "Waiting for confirmation…"
-            : "Send tip"}
+          ? "Waiting for confirmation…"
+          : "Send tip"}
       </button>
     </form>
   );

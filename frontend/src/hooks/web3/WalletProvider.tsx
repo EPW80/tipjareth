@@ -81,10 +81,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       getSigner,
       getProvider,
     }),
-    [account, chainId, hasWallet, connecting, connect, getSigner, getProvider]
+    [account, chainId, hasWallet, connecting, connect, getSigner, getProvider],
   );
 
-  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
+  return (
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+  );
 }
 
 export function useWallet(): WalletState {

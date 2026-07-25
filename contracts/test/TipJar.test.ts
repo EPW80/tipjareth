@@ -210,6 +210,21 @@ describe("TipJar", () => {
       // inner reentrant withdraw() reverts (guard), so the outer transfer fails
       await expect(attacker.attack()).to.be.revertedWithCustomError(tipJar, "TransferFailed");
     });
+
+    it("blocks reentering tipCreator during a withdrawal payout", async () => {
+      const { tipJar, creator, tipper } = await loadFixture(registeredFixture);
+      const attacker = await ethers.deployContract("TipReentrantAttacker", [
+        await tipJar.getAddress(),
+      ]);
+      await attacker.register("tip-attacker");
+      await attacker.setTarget(creator.address);
+      await tipJar
+        .connect(tipper)
+        .tipCreator(await attacker.getAddress(), "gm", false, DEFAULT_FEE_BPS, { value: TIP });
+
+      // inner reentrant tipCreator() reverts (guard), so the outer transfer fails
+      await expect(attacker.attack()).to.be.revertedWithCustomError(tipJar, "TransferFailed");
+    });
   });
 
   describe("owner functions", () => {
@@ -260,6 +275,25 @@ describe("TipJar", () => {
       await expect(
         tipJar.connect(owner).withdrawFees(other.address)
       ).to.be.revertedWithCustomError(tipJar, "NothingToWithdraw");
+    });
+
+    it("blocks reentering withdrawFees during the fee payout", async () => {
+      const attacker = await ethers.deployContract("FeeReentrantAttacker");
+      // the attacker must own the jar: withdrawFees checks onlyOwner before
+      // the reentrancy guard, so only the owner can reach it
+      const tipJar = await ethers.deployContract("TipJar", [
+        await attacker.getAddress(),
+      ]);
+      await attacker.setTipJar(await tipJar.getAddress());
+
+      const [, creator, tipper] = await ethers.getSigners();
+      await tipJar.connect(creator).registerCreator("alice");
+      await tipJar
+        .connect(tipper)
+        .tipCreator(creator.address, "gm", false, DEFAULT_FEE_BPS, { value: TIP });
+
+      // inner reentrant withdrawFees() reverts (guard), so the outer transfer fails
+      await expect(attacker.attack()).to.be.revertedWithCustomError(tipJar, "TransferFailed");
     });
 
     it("reverts fee withdrawal when the recipient rejects ETH", async () => {
