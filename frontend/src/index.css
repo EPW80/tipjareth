@@ -1,1 +1,190 @@
 @import "tailwindcss";
+
+/* --- Design tokens (premium-fintech restyle) ---------------------------
+   Raw custom properties live on <body> and flip under [data-theme="dark"].
+   The @theme inline block re-exports them as Tailwind color/font utilities
+   (bg-surface, text-ink, border-line, font-mono, …) that resolve to the
+   live variable, so utilities theme-switch automatically. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-input-border: var(--inputBorder);
+  --color-inputbg: var(--inputbg);
+  --color-well: var(--well);
+  --color-btn: var(--btn);
+  --color-btn-hover: var(--btnHover);
+  --color-btn-text: var(--btnText);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accentHover);
+  --color-chip: var(--chipBg);
+  --color-green: var(--green);
+  --color-dot-green: var(--dotGreen);
+  --color-danger: var(--danger);
+  --color-amber-bg: var(--amberBg);
+  --color-amber-line: var(--amberLine);
+  --color-amber-text: var(--amberText);
+  --color-card-hover-line: var(--cardHoverLine);
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+body {
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --ink: #14161a;
+  --muted: #5f6672;
+  --faint: #9aa0aa;
+  --line: #e7e7e2;
+  --line2: #f0f0ec;
+  --inputBorder: #d8d8d2;
+  --inputbg: #ffffff;
+  --well: #f6f6f3;
+  --btn: #14161a;
+  --btnHover: #2a2d33;
+  --btnText: #ffffff;
+  --accent: #3f45d6;
+  --accentHover: #2f34a8;
+  --chipBg: #eef0f4;
+  --green: #1a7a4b;
+  --dotGreen: #1a9a5c;
+  --danger: #c23b3b;
+  --amberBg: #faf3e3;
+  --amberLine: #ecdfc0;
+  --amberText: #8a6420;
+  --cardHoverLine: #c9cbd4;
+
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body[data-theme="dark"] {
+  --bg: #0f1013;
+  --surface: #191b1f;
+  --ink: #f2f3f5;
+  --muted: #a2a8b3;
+  --faint: #7c828d;
+  --line: #2a2d33;
+  --line2: #26292e;
+  --inputBorder: #3a3e46;
+  --inputbg: #131519;
+  --well: #22252b;
+  --btn: #f2f3f5;
+  --btnHover: #d7dae0;
+  --btnText: #101114;
+  --accent: #8b90f0;
+  --accentHover: #a6aaf5;
+  --chipBg: #262b36;
+  --green: #4ecb8d;
+  --dotGreen: #2ecc7a;
+  --danger: #e06c6c;
+  --amberBg: #2e2717;
+  --amberLine: #4a3d1f;
+  --amberText: #d9b45c;
+  --cardHoverLine: #3d4149;
+  color-scheme: dark;
+}
+
+input,
+textarea {
+  background: var(--inputbg);
+  color: var(--ink);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--faint);
+}
+
+/* --- Reusable component classes -------------------------------------
+   Reserved for the idioms that need pseudo-classes (hover/focus/disabled),
+   which inline styles can't express. Everything else stays inline with
+   var(--token) so the design's exact px values map 1:1. */
+@layer components {
+  .tf-card {
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(20, 22, 26, 0.04);
+  }
+
+  .tf-btn-primary {
+    border-radius: 8px;
+    background: var(--btn);
+    color: var(--btnText);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .tf-btn-primary:hover:not(:disabled) {
+    background: var(--btnHover);
+  }
+  .tf-btn-primary:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .tf-card-link {
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+    cursor: pointer;
+  }
+  .tf-card-link:hover {
+    border-color: var(--cardHoverLine);
+    box-shadow: 0 3px 10px rgba(20, 22, 26, 0.07);
+  }
+
+  .tf-field {
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .tf-field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(63, 69, 214, 0.12);
+  }
+
+  /* amount input group: ring lives on the wrapper, the input itself is bare */
+  .tf-field-group:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(63, 69, 214, 0.12);
+  }
+  .tf-bare-input:focus {
+    outline: none;
+  }
+
+  .tf-nav-tab {
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+  .tf-nav-tab:hover {
+    color: var(--ink);
+  }
+
+  .tf-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .tf-icon-btn:hover {
+    color: var(--ink);
+    border-color: var(--cardHoverLine);
+  }
+}
