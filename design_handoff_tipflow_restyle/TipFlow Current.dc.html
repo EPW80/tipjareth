@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#0f172a;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4f46e5;text-decoration:none}a:hover{color:#4338ca}
+input,textarea,button{font:inherit}
+</style>
+</helmet>
+<div style="min-height:100vh" data-screen-label="TipFlow (current)">
+<header style="border-bottom:1px solid #e2e8f0;background:#ffffff">
+  <div style="max-width:896px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 16px">
+    <a onClick="{{ goHome }}" style="font-size:18px;line-height:28px;font-weight:700;color:#4f46e5;cursor:pointer">TipFlow</a>
+    <nav style="display:flex;align-items:center;gap:16px;font-size:14px;line-height:20px">
+      <a onClick="{{ goHome }}" style="color:#0f172a;cursor:pointer" style-hover="color:#4f46e5">Creators</a>
+      <a onClick="{{ goRegister }}" style="color:#0f172a;cursor:pointer" style-hover="color:#4f46e5">Become a creator</a>
+      <a onClick="{{ goDashboard }}" style="color:#0f172a;cursor:pointer" style-hover="color:#4f46e5">Dashboard</a>
+      <sc-if value="{{ noWallet }}" hint-placeholder-val="{{ false }}">
+        <span style="border-radius:4px;background:#fef3c7;padding:4px 8px;color:#92400e">No wallet detected</span>
+      </sc-if>
+      <sc-if value="{{ showChip }}" hint-placeholder-val="{{ false }}">
+        <span style="border-radius:4px;background:#f1f5f9;padding:4px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:16px">0xf39F…2266</span>
+      </sc-if>
+      <sc-if value="{{ showConnect }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ connect }}" style="border-radius:4px;background:#4f46e5;padding:6px 12px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Connect wallet</button>
+      </sc-if>
+    </nav>
+  </div>
+  <sc-if value="{{ wrongNetwork }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fef3c7;padding:8px 16px;text-align:center;font-size:14px;line-height:20px;color:#78350f">Wrong network — switch your wallet to the local Hardhat chain (31337).</div>
+  </sc-if>
+</header>
+<main style="max-width:896px;margin:0 auto;padding:32px 16px">
+  <sc-if value="{{ isDirectory }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Creator directory">
+      <h1 style="margin:0 0 24px;font-size:24px;line-height:32px;font-weight:700">Creators</h1>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+        <sc-for list="{{ creators }}" as="c" hint-placeholder-count="4">
+          <li style="border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:16px">
+            <a onClick="{{ c.open }}" style="font-size:18px;line-height:28px;font-weight:600;color:#4f46e5;cursor:pointer" style-hover="text-decoration:underline">@{{ c.username }}</a>
+            <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:16px;color:#94a3b8">{{ c.shortAddr }}</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#475569">{{ c.bio }}</p>
+            <p style="margin:8px 0 0;font-size:12px;line-height:16px;color:#64748b">{{ c.statsLine }}</p>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;gap:24px" data-screen-label="Creator profile">
+      <div>
+        <h1 style="margin:0;font-size:24px;line-height:32px;font-weight:700">@{{ sel.username }}</h1>
+        <p style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:16px;color:#94a3b8">{{ sel.shortAddr }}</p>
+        <p style="margin:8px 0 0;color:#475569">{{ sel.bio }}</p>
+        <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#64748b">{{ sel.statsLine }}</p>
+      </div>
+      <sc-if value="{{ connected }}" hint-placeholder-val="{{ false }}">
+        <form style="display:grid;gap:16px;border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:16px;margin:0">
+          <h2 style="margin:0;font-size:16px;line-height:24px;font-weight:600">Tip @{{ sel.username }}</h2>
+          <label style="display:block;font-size:14px;line-height:20px">Amount (ETH)
+            <input type="text" value="{{ amount }}" onChange="{{ setAmount }}" style="margin-top:4px;width:100%;border-radius:4px;border:1px solid #cbd5e1;padding:8px 12px;display:block" />
+          </label>
+          <label style="display:block;font-size:14px;line-height:20px">Message (optional)
+            <textarea rows="2" value="{{ message }}" onChange="{{ setMessage }}" style="margin-top:4px;width:100%;border-radius:4px;border:1px solid #cbd5e1;padding:8px 12px;display:block;resize:vertical"></textarea>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:20px;cursor:pointer">
+            <input type="checkbox" checked="{{ anon }}" onChange="{{ toggleAnon }}" style="margin-top:2px" />
+            <span>Don't show my name with this tip
+              <span style="display:block;font-size:12px;line-height:16px;color:#64748b">Hides your address in TipFlow only — your wallet address remains publicly visible on the blockchain.</span>
+            </span>
+          </label>
+          <sc-if value="{{ showFee }}" hint-placeholder-val="{{ true }}">
+            <div style="border-radius:4px;background:#f8fafc;padding:12px;font-size:12px;line-height:16px;color:#475569">
+              <div style="display:flex;justify-content:space-between"><span>Platform fee (2.50%)</span><span>{{ feeEth }} ETH</span></div>
+              <div style="display:flex;justify-content:space-between;font-weight:500;color:#1e293b"><span>@{{ sel.username }} receives</span><span>{{ receivesEth }} ETH</span></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ tipError }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:14px;line-height:20px;color:#dc2626">{{ tipError }}</p>
+          </sc-if>
+          <sc-if value="{{ tipSuccess }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0;font-size:14px;line-height:20px;color:#15803d">Tip confirmed — thank you!</p>
+          </sc-if>
+          <button type="button" onClick="{{ sendTip }}" style="width:100%;border-radius:4px;background:#4f46e5;padding:8px 16px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Send tip</button>
+        </form>
+      </sc-if>
+      <sc-if value="{{ notConnected }}" hint-placeholder-val="{{ true }}">
+        <div><button onClick="{{ connect }}" style="border-radius:4px;background:#4f46e5;padding:8px 16px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Connect wallet to tip @{{ sel.username }}</button></div>
+      </sc-if>
+      <div>
+        <h2 style="margin:0 0 12px;font-size:18px;line-height:28px;font-weight:600">Recent tips</h2>
+        <ul style="list-style:none;margin:0;padding:0;display:grid;gap:12px">
+          <sc-for list="{{ tips }}" as="t" hint-placeholder-count="3">
+            <li style="border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:12px;font-size:14px;line-height:20px">
+              <div style="display:flex;justify-content:space-between">
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:16px;color:#64748b">{{ t.from }}</span>
+                <span style="font-weight:500">{{ t.amount }}</span>
+              </div>
+              <sc-if value="{{ t.message }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:4px 0 0;color:#334155">{{ t.message }}</p>
+              </sc-if>
+            </li>
+          </sc-for>
+        </ul>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Become a creator">
+      <sc-if value="{{ notConnected }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center">
+          <p style="margin:0 0 16px;color:#475569">Connect your wallet to register as a creator.</p>
+          <button onClick="{{ connect }}" style="border-radius:4px;background:#4f46e5;padding:8px 16px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Connect wallet</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ connected }}" hint-placeholder-val="{{ true }}">
+        <form style="max-width:448px;margin:0 auto;display:grid;gap:16px">
+          <h1 style="margin:0;font-size:24px;line-height:32px;font-weight:700">Become a creator</h1>
+          <label style="display:block;font-size:14px;line-height:20px">Username
+            <input value="{{ username }}" onChange="{{ setUsername }}" style="margin-top:4px;width:100%;border-radius:4px;border:1px solid #cbd5e1;padding:8px 12px;display:block" />
+            <sc-if value="{{ usernameHint }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:12px;line-height:16px;color:#dc2626">3–30 characters: letters, numbers, underscore.</span>
+            </sc-if>
+          </label>
+          <label style="display:block;font-size:14px;line-height:20px">Bio (optional)
+            <textarea rows="3" value="{{ bio }}" onChange="{{ setBio }}" style="margin-top:4px;width:100%;border-radius:4px;border:1px solid #cbd5e1;padding:8px 12px;display:block;resize:vertical"></textarea>
+          </label>
+          <button type="button" onClick="{{ registerSubmit }}" style="width:100%;border-radius:4px;background:#4f46e5;padding:8px 16px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Register</button>
+          <p style="margin:0;font-size:12px;line-height:16px;color:#64748b">Registration is an on-chain transaction (gas only, no fee) followed by creating your TipFlow profile.</p>
+        </form>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Dashboard">
+      <sc-if value="{{ notConnected }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center">
+          <p style="margin:0 0 16px;color:#475569">Connect your wallet to see your creator dashboard.</p>
+          <button onClick="{{ connect }}" style="border-radius:4px;background:#4f46e5;padding:8px 16px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Connect wallet</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ connected }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;gap:24px">
+          <h1 style="margin:0;font-size:24px;line-height:32px;font-weight:700">Dashboard — @ava_paints</h1>
+          <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+            <div style="border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:16px">
+              <p style="margin:0;font-size:12px;line-height:16px;color:#64748b">Available to withdraw</p>
+              <p style="margin:0;font-size:20px;line-height:28px;font-weight:600">{{ balance }}</p>
+            </div>
+            <div style="border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:16px">
+              <p style="margin:0;font-size:12px;line-height:16px;color:#64748b">Total received</p>
+              <p style="margin:0;font-size:20px;line-height:28px;font-weight:600">3.4210 ETH</p>
+            </div>
+            <div style="border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:16px">
+              <p style="margin:0;font-size:12px;line-height:16px;color:#64748b">Unique tippers</p>
+              <p style="margin:0;font-size:20px;line-height:28px;font-weight:600">61</p>
+            </div>
+          </div>
+          <div>
+            <button onClick="{{ withdraw }}" style="border-radius:4px;background:#4f46e5;padding:8px 16px;color:#ffffff;border:none;cursor:pointer" style-hover="background:#4338ca">Withdraw balance</button>
+            <sc-if value="{{ withdrawn }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#15803d">Withdrawal confirmed.</p>
+            </sc-if>
+          </div>
+          <div>
+            <h2 style="margin:0 0 12px;font-size:18px;line-height:28px;font-weight:600">Your tips</h2>
+            <ul style="list-style:none;margin:0;padding:0;display:grid;gap:12px">
+              <sc-for list="{{ tips }}" as="t" hint-placeholder-count="3">
+                <li style="border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;padding:12px;font-size:14px;line-height:20px">
+                  <div style="display:flex;justify-content:space-between">
+                    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:16px;color:#64748b">{{ t.from }}</span>
+                    <span style="font-weight:500">{{ t.amount }}</span>
+                  </div>
+                  <sc-if value="{{ t.message }}" hint-placeholder-val="{{ false }}">
+                    <p style="margin:4px 0 0;color:#334155">{{ t.message }}</p>
+                  </sc-if>
+                </li>
+              </sc-for>
+            </ul>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;noWallet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Wallet states&quot;},&quot;wrongNetwork&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Wallet states&quot;}}">
+class Component extends DCLogic {
+  state = { screen: "directory", connected: false, sel: null, amount: "0.01", message: "", anon: false, tipSuccess: false, username: "", bio: "", withdrawn: false };
+  creators = [
+    { username: "ava_paints", addr: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F", bio: "Watercolor artist. Live painting sessions every Sunday.", tips: 128, received: "3.4210 ETH" },
+    { username: "pixelnomad", addr: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30", bio: "Indie game dev building a cozy roguelike in public.", tips: 86, received: "1.9034 ETH" },
+    { username: "laurel_codes", addr: "0xbDA5747bFD65F08deb54cb465eB87D40e51B197E", bio: "Open-source maintainer. Rust tutorials every Friday.", tips: 203, received: "5.1176 ETH" },
+    { username: "miso_beats", addr: "0xdD2FD4581271e230360230F9337D5c0430Bf44C0", bio: "Lo-fi producer. A new track every month, free forever.", tips: 54, received: "0.8712 ETH" }
+  ];
+  tipsData = [
+    { from: "0xf39F…2266", amount: "0.05 ETH", message: "Your Sunday stream got me back into painting. Thank you!" },
+    { from: "Anonymous", amount: "0.01 ETH", message: "Keep going!" },
+    { from: "0x7099…79C8", amount: "0.002 ETH", message: null }
+  ];
+  short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
+  fmt(n) { return n.toLocaleString(undefined, { maximumFractionDigits: 6 }); }
+  renderVals() {
+    const s = this.state;
+    const creators = this.creators.map((c) => ({
+      ...c, shortAddr: this.short(c.addr),
+      statsLine: c.tips + " tips · " + c.received + " received",
+      open: () => this.setState({ screen: "profile", sel: c, tipSuccess: false })
+    }));
+    const sel = s.sel ? creators.find((c) => c.username === s.sel.username) : creators[0];
+    const amt = parseFloat(s.amount);
+    const amtValid = /^\d*\.?\d+$/.test(s.amount.trim()) && amt > 0;
+    const belowMin = amtValid && amt < 0.0001;
+    const fee = amtValid ? amt * 0.025 : 0;
+    return {
+      isDirectory: s.screen === "directory", isProfile: s.screen === "profile",
+      isRegister: s.screen === "register", isDashboard: s.screen === "dashboard",
+      connected: s.connected, notConnected: !s.connected,
+      noWallet: !!(this.props.noWallet ?? false),
+      wrongNetwork: !!(this.props.wrongNetwork ?? false),
+      showChip: s.connected && !(this.props.noWallet ?? false),
+      showConnect: !s.connected && !(this.props.noWallet ?? false),
+      creators, sel, tips: this.tipsData,
+      amount: s.amount, message: s.message, anon: s.anon,
+      showFee: amtValid && !belowMin,
+      feeEth: this.fmt(fee), receivesEth: this.fmt(amt - fee),
+      tipError: !s.amount ? "Enter an amount" : !amtValid ? "Invalid amount" : belowMin ? "Minimum tip is 0.0001 ETH" : null,
+      tipSuccess: s.tipSuccess,
+      username: s.username, bio: s.bio,
+      usernameHint: !!s.username && !/^[a-zA-Z0-9_]{3,30}$/.test(s.username),
+      balance: s.withdrawn ? "0 ETH" : "0.4181 ETH", withdrawn: s.withdrawn,
+      goHome: () => this.setState({ screen: "directory" }),
+      goRegister: () => this.setState({ screen: "register" }),
+      goDashboard: () => this.setState({ screen: "dashboard" }),
+      connect: () => this.setState({ connected: true }),
+      setAmount: (e) => this.setState({ amount: e.target.value, tipSuccess: false }),
+      setMessage: (e) => this.setState({ message: e.target.value }),
+      toggleAnon: (e) => this.setState({ anon: e.target.checked }),
+      sendTip: () => { if (amtValid && !belowMin) this.setState({ tipSuccess: true, message: "" }); },
+      setUsername: (e) => this.setState({ username: e.target.value }),
+      setBio: (e) => this.setState({ bio: e.target.value }),
+      registerSubmit: () => this.setState({ screen: "dashboard" }),
+      withdraw: () => this.setState({ withdrawn: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

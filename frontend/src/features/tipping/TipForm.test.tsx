@@ -40,7 +40,10 @@ describe("TipForm", () => {
   it("prompts to connect when no account", () => {
     mockUseWallet.mockReturnValue({ account: null, wrongNetwork: false, connect: vi.fn() });
     render(<TipForm creatorAddress={CREATOR} creatorName="alice" />);
-    expect(screen.getByRole("button", { name: /connect wallet to tip/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/connect a wallet to send @alice a tip/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /connect wallet/i })).toBeInTheDocument();
   });
 
   it("shows the full fee breakdown before signing", () => {
@@ -56,7 +59,7 @@ describe("TipForm", () => {
     render(<TipForm creatorAddress={CREATOR} creatorName="alice" />);
     expect(screen.getByRole("checkbox")).not.toBeChecked();
     expect(
-      screen.getByText(/wallet address remains publicly visible on the blockchain/i)
+      screen.getByText(/it stays publicly visible on the blockchain/i)
     ).toBeInTheDocument();
   });
 
@@ -65,7 +68,9 @@ describe("TipForm", () => {
     render(<TipForm creatorAddress={CREATOR} creatorName="alice" />);
     await user.clear(screen.getByLabelText("Amount in ETH"));
     await user.type(screen.getByLabelText("Amount in ETH"), "abc");
-    expect(screen.getByRole("alert")).toHaveTextContent("Invalid amount");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "That doesn't look like a valid amount."
+    );
     expect(screen.getByRole("button", { name: /send tip/i })).toBeDisabled();
     expect(mockTip).not.toHaveBeenCalled();
   });

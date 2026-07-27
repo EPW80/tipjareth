@@ -19,7 +19,16 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div
+          style={{
+            border: "1px solid var(--amberLine)",
+            background: "var(--amberBg)",
+            color: "var(--amberText)",
+            borderRadius: 8,
+            padding: 16,
+            fontSize: 13.5,
+          }}
+        >
           Something went wrong loading this section. Refresh the page to try again.
         </div>
       );

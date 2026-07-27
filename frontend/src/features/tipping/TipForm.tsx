@@ -12,6 +12,8 @@ interface Props {
 
 const BPS = 10_000n;
 
+const labelStyle = { display: "block", fontSize: 13.5, fontWeight: 500 } as const;
+
 export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
   const { account, wrongNetwork, connect } = useWallet();
   const { feeBps, minTipWei } = useTipJarInfo();
@@ -36,12 +38,12 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
     amountWei !== null && feeBps !== null ? (amountWei * feeBps) / BPS : null;
 
   const validationError = !amount
-    ? "Enter an amount"
+    ? "Enter an amount."
     : amountWei === null
-    ? "Invalid amount"
-    : belowMin
-    ? `Minimum tip is ${formatEther(minTipWei!)} ETH`
-    : null;
+      ? "That doesn't look like a valid amount."
+      : belowMin
+        ? `The minimum tip is ${formatEther(minTipWei!)} ETH.`
+        : null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -66,12 +68,19 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
 
   if (!account) {
     return (
-      <button
-        onClick={() => connect()}
-        className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-      >
-        Connect wallet to tip @{creatorName}
-      </button>
+      <div className="tf-card" style={{ padding: "clamp(18px,5vw,24px)", textAlign: "center" }}>
+        <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--muted)" }}>
+          Connect a wallet to send @{creatorName} a tip.
+        </p>
+        <button
+          type="button"
+          onClick={() => connect()}
+          className="tf-btn-primary"
+          style={{ padding: "12px 18px", fontSize: 14 }}
+        >
+          Connect wallet
+        </button>
+      </div>
     );
   }
 
@@ -80,46 +89,106 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-4"
+      className="tf-card"
+      style={{ display: "grid", gap: 18, padding: "clamp(18px,5vw,24px)", margin: 0 }}
     >
-      <h2 className="font-semibold">Tip @{creatorName}</h2>
+      <div>
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Send a tip</h2>
+        <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)" }}>
+          Goes directly to @{creatorName}'s wallet.
+        </p>
+      </div>
 
-      <label className="block text-sm">
-        Amount (ETH)
-        <input
-          type="text"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-          aria-label="Amount in ETH"
-        />
+      <label style={labelStyle}>
+        Amount
+        <span
+          className="tf-field-group"
+          style={{
+            marginTop: 6,
+            display: "flex",
+            alignItems: "center",
+            border: "1px solid var(--inputBorder)",
+            borderRadius: 8,
+            background: "var(--inputbg)",
+            overflow: "hidden",
+          }}
+        >
+          <input
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="tf-bare-input"
+            aria-label="Amount in ETH"
+            style={{
+              flex: 1,
+              border: "none",
+              padding: "10px 12px",
+              fontFamily: "var(--font-mono)",
+              fontSize: 16,
+              minWidth: 0,
+              background: "transparent",
+            }}
+          />
+          <span
+            style={{
+              padding: "10px 12px",
+              background: "var(--well)",
+              borderLeft: "1px solid var(--line)",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--muted)",
+            }}
+          >
+            ETH
+          </span>
+        </span>
       </label>
 
-      <label className="block text-sm">
-        Message (optional)
+      <label style={labelStyle}>
+        Message <span style={{ fontWeight: 400, color: "var(--faint)" }}>(optional)</span>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           maxLength={280}
           rows={2}
-          className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+          placeholder="Say something nice — it shows on their profile"
+          className="tf-field"
           aria-label="Tip message"
+          style={{
+            marginTop: 6,
+            width: "100%",
+            borderRadius: 8,
+            border: "1px solid var(--inputBorder)",
+            padding: "10px 12px",
+            display: "block",
+            resize: "vertical",
+            fontSize: 16,
+          }}
         />
       </label>
 
-      <label className="flex items-start gap-2 text-sm">
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, cursor: "pointer" }}>
         <input
           type="checkbox"
           checked={isAnonymous}
           onChange={(e) => setIsAnonymous(e.target.checked)}
-          className="mt-0.5"
+          style={{ marginTop: 2, accentColor: "var(--btn)" }}
         />
-        <span>
+        <span style={{ fontWeight: 500 }}>
           Don't show my name with this tip
-          <span className="block text-xs text-slate-500">
-            Hides your address in TipFlow only — your wallet address remains
-            publicly visible on the blockchain.
+          <span
+            style={{
+              display: "block",
+              marginTop: 2,
+              fontSize: 12,
+              fontWeight: 400,
+              lineHeight: "17px",
+              color: "var(--faint)",
+            }}
+          >
+            Hides your address on TipFlow only — it stays publicly visible on the
+            blockchain.
           </span>
         </span>
       </label>
@@ -127,37 +196,52 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
       {/* fee transparency: full breakdown before the user signs */}
       {amountWei !== null && feeWei !== null && !belowMin && (
         <div
-          className="rounded bg-slate-50 p-3 text-xs text-slate-600"
           data-testid="fee-breakdown"
+          style={{
+            borderRadius: 8,
+            background: "var(--well)",
+            padding: 14,
+            fontSize: 13,
+            display: "grid",
+            gap: 6,
+          }}
         >
-          <div className="flex justify-between">
+          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--muted)" }}>
             <span>Platform fee ({(Number(feeBps) / 100).toFixed(2)}%)</span>
-            <span>{formatEther(feeWei)} ETH</span>
+            <span style={{ fontFamily: "var(--font-mono)" }}>{formatEther(feeWei)} ETH</span>
           </div>
-          <div className="flex justify-between font-medium text-slate-800">
+          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
             <span>@{creatorName} receives</span>
-            <span>{formatEther(amountWei - feeWei)} ETH</span>
+            <span style={{ fontFamily: "var(--font-mono)" }}>
+              {formatEther(amountWei - feeWei)} ETH
+            </span>
           </div>
+          <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "var(--faint)" }}>
+            You'll confirm the exact total in your wallet before anything is sent.
+          </p>
         </div>
       )}
 
       {validationError && amount && (
-        <p className="text-sm text-red-600" role="alert">
+        <p style={{ margin: 0, fontSize: 13.5, color: "var(--danger)" }} role="alert">
           {validationError}
         </p>
       )}
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p style={{ margin: 0, fontSize: 13.5, color: "var(--danger)" }} role="alert">
           {error}
         </p>
       )}
       {success && (
-        <p className="text-sm text-green-700" role="status">
-          Tip confirmed — thank you!
+        <p
+          style={{ margin: 0, fontSize: 13.5, color: "var(--green)", fontWeight: 500 }}
+          role="status"
+        >
+          Tip confirmed — thank you for supporting @{creatorName}.
         </p>
       )}
       {wrongNetwork && (
-        <p className="text-sm text-amber-700">
+        <p style={{ margin: 0, fontSize: 13.5, color: "var(--amberText)" }}>
           Switch to the local Hardhat network to tip.
         </p>
       )}
@@ -165,13 +249,14 @@ export function TipForm({ creatorAddress, creatorName, onTipped }: Props) {
       <button
         type="submit"
         disabled={busy || !!validationError || wrongNetwork || feeBps === null}
-        className="w-full rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+        className="tf-btn-primary"
+        style={{ width: "100%", padding: "13px 16px", fontSize: 14 }}
       >
         {state === "signing"
-          ? "Confirm in wallet…"
+          ? "Confirm in your wallet…"
           : state === "mining"
-          ? "Waiting for confirmation…"
-          : "Send tip"}
+            ? "Waiting for confirmation…"
+            : "Send tip"}
       </button>
     </form>
   );

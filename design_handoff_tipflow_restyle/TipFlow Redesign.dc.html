@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{--bg:#f6f6f3;--surface:#ffffff;--ink:#14161a;--muted:#5f6672;--faint:#9aa0aa;--line:#e7e7e2;--line2:#f0f0ec;--inputBorder:#d8d8d2;--inputbg:#ffffff;--well:#f6f6f3;--btn:#14161a;--btnHover:#2a2d33;--btnText:#ffffff;--accent:#3f45d6;--accentHover:#2f34a8;--chipBg:#eef0f4;--green:#1a7a4b;--dotGreen:#1a9a5c;--danger:#c23b3b;--amberBg:#faf3e3;--amberLine:#ecdfc0;--amberText:#8a6420;--cardHoverLine:#c9cbd4}
+body[data-theme="dark"]{--bg:#0f1013;--surface:#191b1f;--ink:#f2f3f5;--muted:#a2a8b3;--faint:#7c828d;--line:#2a2d33;--line2:#26292e;--inputBorder:#3a3e46;--inputbg:#131519;--well:#22252b;--btn:#f2f3f5;--btnHover:#d7dae0;--btnText:#101114;--accent:#8b90f0;--accentHover:#a6aaf5;--chipBg:#262b36;--green:#4ecb8d;--dotGreen:#2ecc7a;--danger:#e06c6c;--amberBg:#2e2717;--amberLine:#4a3d1f;--amberText:#d9b45c;--cardHoverLine:#3d4149;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accentHover)}
+input,textarea,button{font:inherit}
+input,textarea{background:var(--inputbg);color:var(--ink)}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column" data-screen-label="TipFlow redesign">
+<header style="background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10">
+  <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px clamp(16px,4vw,20px) 2px">
+    <a onClick="{{ goHome }}" style="display:flex;align-items:center;gap:9px;cursor:pointer;color:var(--ink)">
+      <span style="width:28px;height:28px;border-radius:8px;background:var(--btn);color:var(--btnText);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600">Ξ</span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-0.01em">TipFlow</span>
+    </a>
+    <div style="display:flex;align-items:center;min-height:36px">
+      <sc-if value="{{ noWallet }}" hint-placeholder-val="{{ false }}">
+        <span style="border:1px solid var(--amberLine);background:var(--amberBg);color:var(--amberText);border-radius:999px;padding:6px 12px;font-size:13px;white-space:nowrap">No wallet detected</span>
+      </sc-if>
+      <sc-if value="{{ showChip }}" hint-placeholder-val="{{ true }}">
+        <span style="display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--dotGreen)"></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">0xf39F…2266</span>
+        </span>
+      </sc-if>
+      <sc-if value="{{ showConnect }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ connect }}" style="border-radius:8px;background:var(--btn);padding:10px 16px;color:var(--btnText);border:none;cursor:pointer;font-size:13.5px;font-weight:500" style-hover="background:var(--btnHover)">Connect wallet</button>
+      </sc-if>
+    </div>
+  </div>
+  <nav style="max-width:960px;margin:0 auto;padding:0 clamp(16px,4vw,20px);display:flex;gap:24px;font-size:14px;font-weight:500;overflow-x:auto">
+    <a onClick="{{ goHome }}" style="color:{{ navHome }};cursor:pointer;padding:10px 0 12px;border-bottom:2px solid {{ lineHome }};white-space:nowrap;flex:none" style-hover="color:var(--ink)">Creators</a>
+    <a onClick="{{ goRegister }}" style="color:{{ navRegister }};cursor:pointer;padding:10px 0 12px;border-bottom:2px solid {{ lineRegister }};white-space:nowrap;flex:none" style-hover="color:var(--ink)">Become a creator</a>
+    <a onClick="{{ goDashboard }}" style="color:{{ navDashboard }};cursor:pointer;padding:10px 0 12px;border-bottom:2px solid {{ lineDashboard }};white-space:nowrap;flex:none" style-hover="color:var(--ink)">Dashboard</a>
+  </nav>
+  <sc-if value="{{ wrongNetwork }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--amberBg);border-top:1px solid var(--amberLine);padding:9px 20px;text-align:center;font-size:13.5px;color:var(--amberText)">Your wallet is on the wrong network. Switch to the local Hardhat chain (31337) to continue.</div>
+  </sc-if>
+</header>
+<main style="max-width:960px;width:100%;margin:0 auto;padding:clamp(28px,6vw,44px) clamp(16px,4.5vw,20px) 72px;flex:1">
+  <sc-if value="{{ isDirectory }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Creator directory">
+      <div style="margin-bottom:28px">
+        <h1 style="margin:0;font-size:clamp(24px,6vw,28px);line-height:1.25;font-weight:700;letter-spacing:-0.02em">Creators</h1>
+        <p style="margin:6px 0 0;font-size:15px;color:var(--muted);text-wrap:pretty">Tips go straight to each creator's wallet. One flat 2.5% platform fee, always shown before you send.</p>
+      </div>
+      <sc-if value="{{ hasCreators }}" hint-placeholder-val="{{ true }}">
+        <ul style="list-style:none;margin:0;padding:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr))">
+          <sc-for list="{{ creators }}" as="c" hint-placeholder-count="4">
+            <li onClick="{{ c.open }}" style="border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(20,22,26,0.04);transition:border-color .15s,box-shadow .15s" style-hover="border-color:var(--cardHoverLine);box-shadow:0 3px 10px rgba(20,22,26,0.07)">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="width:40px;height:40px;border-radius:50%;background:var(--chipBg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;flex:none">{{ c.initial }}</span>
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:16px;font-weight:600">@{{ c.username }}</p>
+                  <p style="margin:1px 0 0;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--faint)">{{ c.shortAddr }}</p>
+                </div>
+              </div>
+              <p style="margin:12px 0 0;font-size:14px;line-height:20px;color:var(--muted);text-wrap:pretty">{{ c.bio }}</p>
+              <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line2);display:flex;gap:16px;font-size:12.5px;color:var(--muted)">
+                <span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ink)">{{ c.tips }}</span> tips</span>
+                <span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ink)">{{ c.received }}</span> received</span>
+              </div>
+            </li>
+          </sc-for>
+        </ul>
+      </sc-if>
+      <sc-if value="{{ noCreators }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px dashed var(--inputBorder);border-radius:12px;padding:56px 24px;text-align:center">
+          <p style="margin:0;font-size:16px;font-weight:600">No creators yet</p>
+          <p style="margin:6px 0 18px;font-size:14px;color:var(--muted)">TipFlow is brand new here. Claim your username first.</p>
+          <button onClick="{{ goRegister }}" style="border-radius:8px;background:var(--btn);padding:12px 18px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500" style-hover="background:var(--btnHover)">Become a creator</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;gap:24px" data-screen-label="Creator profile">
+      <div style="border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:clamp(18px,5vw,24px);box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <span style="width:56px;height:56px;border-radius:50%;background:var(--chipBg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:22px;flex:none">{{ sel.initial }}</span>
+          <div style="min-width:0">
+            <h1 style="margin:0;font-size:24px;line-height:30px;font-weight:700;letter-spacing:-0.02em">@{{ sel.username }}</h1>
+            <p style="margin:3px 0 0;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint)">{{ sel.addr }}</p>
+          </div>
+        </div>
+        <p style="margin:16px 0 0;font-size:15px;line-height:22px;color:var(--muted);text-wrap:pretty">{{ sel.bio }}</p>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line2);display:flex;gap:24px;font-size:13px;color:var(--muted)">
+          <span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ink)">{{ sel.tips }}</span> tips</span>
+          <span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ink)">{{ sel.received }}</span> received</span>
+        </div>
+      </div>
+      <div style="display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));align-items:start">
+        <div>
+          <sc-if value="{{ connected }}" hint-placeholder-val="{{ true }}">
+            <form style="display:grid;gap:18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:clamp(18px,5vw,24px);margin:0;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+              <div>
+                <h2 style="margin:0;font-size:17px;font-weight:600">Send a tip</h2>
+                <p style="margin:3px 0 0;font-size:13px;color:var(--muted)">Goes directly to @{{ sel.username }}'s wallet.</p>
+              </div>
+              <label style="display:block;font-size:13.5px;font-weight:500">Amount
+                <span style="margin-top:6px;display:flex;align-items:center;border:1px solid var(--inputBorder);border-radius:8px;background:var(--inputbg);overflow:hidden">
+                  <input type="text" inputMode="decimal" value="{{ amount }}" onChange="{{ setAmount }}" style="flex:1;border:none;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:16px;min-width:0" style-focus="outline:none" />
+                  <span style="padding:10px 12px;background:var(--well);border-left:1px solid var(--line);font-size:13px;font-weight:500;color:var(--muted)">ETH</span>
+                </span>
+              </label>
+              <label style="display:block;font-size:13.5px;font-weight:500">Message <span style="font-weight:400;color:var(--faint)">(optional)</span>
+                <textarea rows="2" value="{{ message }}" onChange="{{ setMessage }}" placeholder="Say something nice — it shows on their profile" style="margin-top:6px;width:100%;border-radius:8px;border:1px solid var(--inputBorder);padding:10px 12px;display:block;resize:vertical;font-size:16px" style-focus="outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(63,69,214,0.12)"></textarea>
+              </label>
+              <label style="display:flex;align-items:flex-start;gap:9px;font-size:13.5px;cursor:pointer">
+                <input type="checkbox" checked="{{ anon }}" onChange="{{ toggleAnon }}" style="margin-top:2px;accent-color:var(--btn)" />
+                <span style="font-weight:500">Don't show my name with this tip
+                  <span style="display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:17px;color:var(--faint);text-wrap:pretty">Hides your address on TipFlow only — it stays publicly visible on the blockchain.</span>
+                </span>
+              </label>
+              <sc-if value="{{ showFee }}" hint-placeholder-val="{{ true }}">
+                <div style="border-radius:8px;background:var(--well);padding:14px;font-size:13px;display:grid;gap:6px">
+                  <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Platform fee (2.50%)</span><span style="font-family:'IBM Plex Mono',monospace">{{ feeEth }} ETH</span></div>
+                  <div style="display:flex;justify-content:space-between;font-weight:600"><span>@{{ sel.username }} receives</span><span style="font-family:'IBM Plex Mono',monospace">{{ receivesEth }} ETH</span></div>
+                  <p style="margin:2px 0 0;font-size:11.5px;color:var(--faint)">You'll confirm the exact total in your wallet before anything is sent.</p>
+                </div>
+              </sc-if>
+              <sc-if value="{{ tipError }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:0;font-size:13.5px;color:var(--danger)">{{ tipError }}</p>
+              </sc-if>
+              <sc-if value="{{ tipSuccess }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:0;font-size:13.5px;color:var(--green);font-weight:500">Tip confirmed — thank you for supporting @{{ sel.username }}.</p>
+              </sc-if>
+              <button type="button" onClick="{{ sendTip }}" disabled="{{ tipDisabled }}" style="width:100%;border-radius:8px;background:var(--btn);padding:13px 16px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500;opacity:{{ tipOpacity }}" style-hover="background:var(--btnHover)">{{ tipButtonLabel }}</button>
+            </form>
+          </sc-if>
+          <sc-if value="{{ notConnected }}" hint-placeholder-val="{{ false }}">
+            <div style="border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:clamp(18px,5vw,24px);text-align:center;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+              <p style="margin:0 0 14px;font-size:14px;color:var(--muted);text-wrap:pretty">Connect a wallet to send @{{ sel.username }} a tip.</p>
+              <button onClick="{{ connect }}" style="border-radius:8px;background:var(--btn);padding:12px 18px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500" style-hover="background:var(--btnHover)">Connect wallet</button>
+            </div>
+          </sc-if>
+        </div>
+        <div>
+          <h2 style="margin:0 0 12px;font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Recent tips</h2>
+          <sc-if value="{{ hasTips }}" hint-placeholder-val="{{ true }}">
+            <ul style="list-style:none;margin:0;padding:0;display:grid;gap:10px">
+              <sc-for list="{{ tips }}" as="t" hint-placeholder-count="3">
+                <li style="border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:14px 16px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint)">{{ t.from }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">+{{ t.amount }}</span>
+                  </div>
+                  <sc-if value="{{ t.message }}" hint-placeholder-val="{{ false }}">
+                    <p style="margin:7px 0 0;font-size:14px;line-height:20px;color:var(--ink);text-wrap:pretty">{{ t.message }}</p>
+                  </sc-if>
+                </li>
+              </sc-for>
+            </ul>
+          </sc-if>
+          <sc-if value="{{ noTips }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px dashed var(--inputBorder);border-radius:10px;padding:28px 16px;text-align:center;font-size:13.5px;color:var(--faint)">No tips yet. Yours could be the first.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Become a creator">
+      <sc-if value="{{ notConnected }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:440px;margin:40px auto 0;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:clamp(22px,6vw,32px);text-align:center;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+          <p style="margin:0 0 4px;font-size:17px;font-weight:600">Become a creator</p>
+          <p style="margin:0 0 18px;font-size:14px;color:var(--muted);text-wrap:pretty">Connect a wallet to claim your username and start receiving tips.</p>
+          <button onClick="{{ connect }}" style="border-radius:8px;background:var(--btn);padding:12px 18px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500" style-hover="background:var(--btnHover)">Connect wallet</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ connected }}" hint-placeholder-val="{{ true }}">
+        <form style="max-width:440px;margin:0 auto;display:grid;gap:18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:clamp(20px,5vw,28px);box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+          <div>
+            <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:700;letter-spacing:-0.02em">Become a creator</h1>
+            <p style="margin:5px 0 0;font-size:14px;color:var(--muted);text-wrap:pretty">Claim a username and start receiving tips directly to your wallet.</p>
+          </div>
+          <label style="display:block;font-size:13.5px;font-weight:500">Username
+            <input value="{{ username }}" onChange="{{ setUsername }}" placeholder="your_handle" style="margin-top:6px;width:100%;border-radius:8px;border:1px solid var(--inputBorder);padding:10px 12px;display:block;font-size:16px" style-focus="outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(63,69,214,0.12)" />
+            <sc-if value="{{ usernameHint }}" hint-placeholder-val="{{ false }}">
+              <span style="display:block;margin-top:5px;font-size:12px;color:var(--danger)">3–30 characters: letters, numbers, underscore.</span>
+            </sc-if>
+          </label>
+          <label style="display:block;font-size:13.5px;font-weight:500">Bio <span style="font-weight:400;color:var(--faint)">(optional)</span>
+            <textarea rows="3" value="{{ bio }}" onChange="{{ setBio }}" placeholder="What do you make?" style="margin-top:6px;width:100%;border-radius:8px;border:1px solid var(--inputBorder);padding:10px 12px;display:block;resize:vertical;font-size:16px" style-focus="outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(63,69,214,0.12)"></textarea>
+          </label>
+          <button type="button" onClick="{{ registerSubmit }}" style="width:100%;border-radius:8px;background:var(--btn);padding:13px 16px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500" style-hover="background:var(--btnHover)">Register</button>
+          <p style="margin:0;font-size:12px;line-height:17px;color:var(--faint);text-wrap:pretty">Registering is a one-time on-chain transaction. You pay network gas only — TipFlow charges nothing to join.</p>
+        </form>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Dashboard">
+      <sc-if value="{{ notConnected }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:440px;margin:40px auto 0;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:clamp(22px,6vw,32px);text-align:center;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+          <p style="margin:0 0 4px;font-size:17px;font-weight:600">Your dashboard</p>
+          <p style="margin:0 0 18px;font-size:14px;color:var(--muted)">Connect your wallet to see your earnings and tips.</p>
+          <button onClick="{{ connect }}" style="border-radius:8px;background:var(--btn);padding:12px 18px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500" style-hover="background:var(--btnHover)">Connect wallet</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ connected }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;gap:24px">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <h1 style="margin:0;font-size:clamp(24px,6vw,28px);line-height:1.25;font-weight:700;letter-spacing:-0.02em">Dashboard</h1>
+            <span style="font-size:15px;color:var(--muted)">@ava_paints</span>
+          </div>
+          <div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))">
+            <div style="border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:20px;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+              <p style="margin:0;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--faint)">Available to withdraw</p>
+              <p style="margin:8px 0 0;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">{{ balance }}</p>
+            </div>
+            <div style="border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:20px;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+              <p style="margin:0;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--faint)">Total received</p>
+              <p style="margin:8px 0 0;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">3.4210 ETH</p>
+            </div>
+            <div style="border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:20px;box-shadow:0 1px 2px rgba(20,22,26,0.04)">
+              <p style="margin:0;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--faint)">Unique tippers</p>
+              <p style="margin:8px 0 0;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">61</p>
+            </div>
+          </div>
+          <div>
+            <button onClick="{{ withdraw }}" style="border-radius:8px;background:var(--btn);padding:13px 18px;color:var(--btnText);border:none;cursor:pointer;font-size:14px;font-weight:500" style-hover="background:var(--btnHover)">Withdraw balance</button>
+            <p style="margin:9px 0 0;font-size:12.5px;color:var(--faint)">Withdraw anytime, straight to your wallet. No withdrawal fee — you pay network gas only.</p>
+            <sc-if value="{{ withdrawn }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:8px 0 0;font-size:13.5px;color:var(--green);font-weight:500">Withdrawal confirmed.</p>
+            </sc-if>
+          </div>
+          <div>
+            <h2 style="margin:0 0 12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-size:12.5px">Your tips</h2>
+            <sc-if value="{{ hasTips }}" hint-placeholder-val="{{ true }}">
+              <ul style="list-style:none;margin:0;padding:0;display:grid;gap:10px">
+                <sc-for list="{{ tips }}" as="t" hint-placeholder-count="3">
+                  <li style="border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:14px 16px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint)">{{ t.from }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--green)">+{{ t.amount }}</span>
+                    </div>
+                    <sc-if value="{{ t.message }}" hint-placeholder-val="{{ false }}">
+                      <p style="margin:7px 0 0;font-size:14px;line-height:20px;color:var(--ink);text-wrap:pretty">{{ t.message }}</p>
+                    </sc-if>
+                  </li>
+                </sc-for>
+              </ul>
+            </sc-if>
+            <sc-if value="{{ noTips }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px dashed var(--inputBorder);border-radius:10px;padding:28px 16px;text-align:center;font-size:13.5px;color:var(--faint)">No tips yet. Share your profile link to get started.</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+</main>
+<footer style="border-top:1px solid var(--line);background:var(--surface)">
+  <div style="max-width:960px;margin:0 auto;padding:16px clamp(16px,4vw,20px);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--faint)">
+    <span>TipFlow — tips settle on-chain, verified before they appear.</span>
+    <span style="font-family:'IBM Plex Mono',monospace">Hardhat · chain 31337</span>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;section&quot;:&quot;Theme&quot;},&quot;walletState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;connected&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;connected&quot;,&quot;disconnected&quot;,&quot;no-wallet&quot;,&quot;wrong-network&quot;],&quot;section&quot;:&quot;States&quot;},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;loaded&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;loaded&quot;,&quot;empty&quot;],&quot;section&quot;:&quot;States&quot;},&quot;txState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;confirmed&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;signing&quot;,&quot;mining&quot;,&quot;confirmed&quot;],&quot;section&quot;:&quot;States&quot;}}">
+class Component extends DCLogic {
+  state = { screen: "directory", sel: null, amount: "0.01", message: "", anon: false, tipSuccess: false, username: "", bio: "", withdrawn: false, connectedOverride: false };
+  creators = [
+    { username: "ava_paints", addr: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F", bio: "Watercolor artist. Live painting sessions every Sunday.", tips: 128, received: "3.4210 ETH" },
+    { username: "pixelnomad", addr: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30", bio: "Indie game dev building a cozy roguelike in public.", tips: 86, received: "1.9034 ETH" },
+    { username: "laurel_codes", addr: "0xbDA5747bFD65F08deb54cb465eB87D40e51B197E", bio: "Open-source maintainer. Rust tutorials every Friday.", tips: 203, received: "5.1176 ETH" },
+    { username: "miso_beats", addr: "0xdD2FD4581271e230360230F9337D5c0430Bf44C0", bio: "Lo-fi producer. A new track every month, free forever.", tips: 54, received: "0.8712 ETH" }
+  ];
+  tipsData = [
+    { from: "0xf39F…2266", amount: "0.05 ETH", message: "Your Sunday stream got me back into painting. Thank you!" },
+    { from: "Anonymous", amount: "0.01 ETH", message: "Keep going!" },
+    { from: "0x7099…79C8", amount: "0.002 ETH", message: null }
+  ];
+  componentDidMount() { this.applyTheme(); }
+  componentDidUpdate() { this.applyTheme(); }
+  applyTheme() { document.body.dataset.theme = this.props.theme ?? "light"; }
+  short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
+  fmt(n) { return n.toLocaleString(undefined, { maximumFractionDigits: 6 }); }
+  renderVals() {
+    const s = this.state;
+    const wallet = this.props.walletState ?? "connected";
+    const data = this.props.dataState ?? "loaded";
+    const tx = this.props.txState ?? "idle";
+    const connected = wallet === "connected" || wallet === "wrong-network" || s.connectedOverride;
+    const creators = this.creators.map((c) => ({
+      ...c, shortAddr: this.short(c.addr), initial: c.username[0].toUpperCase(),
+      open: () => this.setState({ screen: "profile", sel: c, tipSuccess: false })
+    }));
+    const sel = s.sel ? creators.find((c) => c.username === s.sel.username) : creators[0];
+    const amt = parseFloat(s.amount);
+    const amtValid = /^\d*\.?\d+$/.test(s.amount.trim()) && amt > 0;
+    const belowMin = amtValid && amt < 0.0001;
+    const fee = amtValid ? amt * 0.025 : 0;
+    const busy = tx === "signing" || tx === "mining";
+    const muted = "var(--muted)", ink = "var(--ink)";
+    return {
+      isDirectory: s.screen === "directory", isProfile: s.screen === "profile",
+      isRegister: s.screen === "register", isDashboard: s.screen === "dashboard",
+      navHome: s.screen === "directory" ? ink : muted,
+      navRegister: s.screen === "register" ? ink : muted,
+      navDashboard: s.screen === "dashboard" ? ink : muted,
+      lineHome: s.screen === "directory" ? ink : "transparent",
+      lineRegister: s.screen === "register" ? ink : "transparent",
+      lineDashboard: s.screen === "dashboard" ? ink : "transparent",
+      connected, notConnected: !connected,
+      noWallet: wallet === "no-wallet",
+      wrongNetwork: wallet === "wrong-network",
+      showChip: connected && wallet !== "no-wallet",
+      showConnect: !connected && wallet !== "no-wallet",
+      hasCreators: data !== "empty", noCreators: data === "empty",
+      hasTips: data !== "empty", noTips: data === "empty",
+      creators, sel, tips: this.tipsData,
+      amount: s.amount, message: s.message, anon: s.anon,
+      showFee: amtValid && !belowMin,
+      feeEth: this.fmt(fee), receivesEth: this.fmt(amt - fee),
+      tipError: !s.amount ? "Enter an amount." : !amtValid ? "That doesn't look like a valid amount." : belowMin ? "The minimum tip is 0.0001 ETH." : null,
+      tipSuccess: s.tipSuccess || tx === "confirmed",
+      tipButtonLabel: tx === "signing" ? "Confirm in your wallet…" : tx === "mining" ? "Waiting for confirmation…" : "Send tip",
+      tipDisabled: busy || !amtValid || belowMin || wallet === "wrong-network",
+      tipOpacity: busy || !amtValid || belowMin || wallet === "wrong-network" ? 0.45 : 1,
+      username: s.username, bio: s.bio,
+      usernameHint: !!s.username && !/^[a-zA-Z0-9_]{3,30}$/.test(s.username),
+      balance: s.withdrawn ? "0 ETH" : "0.4181 ETH", withdrawn: s.withdrawn,
+      goHome: () => this.setState({ screen: "directory" }),
+      goRegister: () => this.setState({ screen: "register" }),
+      goDashboard: () => this.setState({ screen: "dashboard" }),
+      connect: () => this.setState({ connectedOverride: true }),
+      setAmount: (e) => this.setState({ amount: e.target.value, tipSuccess: false }),
+      setMessage: (e) => this.setState({ message: e.target.value }),
+      toggleAnon: (e) => this.setState({ anon: e.target.checked }),
+      sendTip: () => { if (amtValid && !belowMin && !busy) this.setState({ tipSuccess: true, message: "" }); },
+      setUsername: (e) => this.setState({ username: e.target.value }),
+      setBio: (e) => this.setState({ bio: e.target.value }),
+      registerSubmit: () => this.setState({ screen: "dashboard" }),
+      withdraw: () => this.setState({ withdrawn: true })
+    };
+  }
+}
+</script>
+</body>
+</html>
