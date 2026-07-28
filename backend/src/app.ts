@@ -10,6 +10,10 @@ import tipsRouter from "./routes/tips";
 export function createApp() {
   const app = express();
 
+  // Behind Render's (and Vercel's) proxy: trust the first hop so the rate
+  // limiter and req.ip see the real client address, not the load balancer.
+  app.set("trust proxy", 1);
+
   app.use(helmet());
   app.use(cors({ origin: env.frontendUrl }));
   app.use(express.json({ limit: "16kb" }));
