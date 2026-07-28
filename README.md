@@ -20,6 +20,16 @@ npm test               # contracts + backend + frontend tests
 
 Requires Node 22+, a local MongoDB (`mongodb://localhost:27017/tipflow-local`), and MetaMask pointed at `localhost:8545` (chainId 31337) for the browser flow.
 
+## Screenshots
+
+| Creators | Tip a creator |
+| --- | --- |
+| ![Creators list](docs/screenshots/creators.png) | ![Creator tip page](docs/screenshots/tip-page.png) |
+
+| Become a creator | Dashboard |
+| --- | --- |
+| ![Register page](docs/screenshots/register.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+
 ## Layout
 
 ```
