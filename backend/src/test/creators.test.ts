@@ -43,6 +43,9 @@ describe("POST /api/creators", () => {
       .post("/api/creators")
       .send({ walletAddress: WALLET, username: "a!" });
     expect(res.status).toBe(400);
+    // validation surfaces a client-facing `error` string (not just `errors`)
+    expect(typeof res.body.error).toBe("string");
+    expect(res.body.error).toMatch(/username/i);
   });
 
   it("returns 409 for a duplicate wallet", async () => {
