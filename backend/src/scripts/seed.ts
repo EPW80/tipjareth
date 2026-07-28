@@ -8,9 +8,8 @@ import { Contract, JsonRpcProvider, parseEther } from "ethers";
 import mongoose from "mongoose";
 import { env } from "../config/env";
 import { Creator } from "../models/Creator";
-import { getTipJarAddress } from "../services/chainService";
-import { verifyTip } from "../services/chainService";
-import { Tip } from "../models/Tip";
+import { getTipJarAddress, verifyTip } from "../services/chainService";
+import { applyConfirmedTip } from "../services/tipConfirmation";
 
 const TIP_JAR_ABI = [
   "function registerCreator(string username)",
@@ -58,38 +57,11 @@ async function main() {
   });
   await tx.wait();
 
-  // store it exactly like the API would: from the on-chain event
+  // store it exactly like the API would: verify from the on-chain event, then
+  // confirm + credit via the same idempotent path the API uses (safe to re-run)
   const verified = await verifyTip(tx.hash);
   if (verified?.status === "confirmed") {
-    const creator = await Creator.findOne({ walletAddress: verified.creatorAddress });
-    await Tip.updateOne(
-      { txHash: tx.hash.toLowerCase() },
-      {
-        $setOnInsert: {
-          txHash: tx.hash.toLowerCase(),
-          status: "confirmed",
-          fromAddress: verified.fromAddress,
-          creatorAddress: verified.creatorAddress,
-          creator: creator?._id,
-          amountWei: verified.amountWei,
-          feeWei: verified.feeWei,
-          message: verified.message,
-          isAnonymous: verified.isAnonymous,
-          blockNumber: verified.blockNumber,
-        },
-      },
-      { upsert: true }
-    );
-    if (creator) {
-      const creatorAmount = BigInt(verified.amountWei) - BigInt(verified.feeWei);
-      await Creator.updateOne(
-        { _id: creator._id },
-        {
-          $inc: { "stats.tipCount": 1 },
-          $set: { "stats.totalReceivedWei": creatorAmount.toString() },
-        }
-      );
-    }
+    await applyConfirmedTip(tx.hash.toLowerCase(), verified);
     console.log(`seeded demo tip ${tx.hash}`);
   }
 

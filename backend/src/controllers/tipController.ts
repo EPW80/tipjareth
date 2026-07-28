@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { Creator } from "../models/Creator";
 import { Tip } from "../models/Tip";
 import * as chainService from "../services/chainService";
+import { applyConfirmedTip } from "../services/tipConfirmation";
 
 const MAX_PAGE_SIZE = 50;
 
@@ -41,41 +41,9 @@ export async function submitTip(req: Request, res: Response, next: NextFunction)
       return;
     }
 
-    const creator = await Creator.findOne({ walletAddress: verified.creatorAddress });
-    const tip = await Tip.findOneAndUpdate(
-      { txHash },
-      {
-        $set: {
-          status: "confirmed",
-          fromAddress: verified.fromAddress,
-          creatorAddress: verified.creatorAddress,
-          creator: creator?._id,
-          amountWei: verified.amountWei,
-          feeWei: verified.feeWei,
-          message: verified.message,
-          isAnonymous: verified.isAnonymous,
-          blockNumber: verified.blockNumber,
-        },
-      },
-      { new: true, upsert: true }
-    );
-
-    // stats update happens exactly once: the early return above guarantees
-    // this tip was not already confirmed
-    if (creator) {
-      const creatorAmount = BigInt(verified.amountWei) - BigInt(verified.feeWei);
-      await Creator.updateOne(
-        { _id: creator._id },
-        {
-          $inc: { "stats.tipCount": 1 },
-          $set: {
-            "stats.totalReceivedWei": (
-              BigInt(creator.stats?.totalReceivedWei ?? "0") + creatorAmount
-            ).toString(),
-          },
-        }
-      );
-    }
+    // confirm + credit stats atomically (shared with the background poller,
+    // so a concurrent confirmer pass can never double-count)
+    const { tip } = await applyConfirmedTip(txHash, verified);
 
     res.status(existing ? 200 : 201).json(tip);
   } catch (err) {

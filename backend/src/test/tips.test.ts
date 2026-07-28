@@ -5,6 +5,7 @@ import { Creator } from "../models/Creator";
 import { Tip } from "../models/Tip";
 import * as chainService from "../services/chainService";
 import type { VerifiedTip } from "../services/chainService";
+import { confirmPendingTips } from "../services/pendingConfirmer";
 
 vi.mock("../services/chainService", () => ({
   verifyTip: vi.fn(),
@@ -16,6 +17,7 @@ const verifyTip = vi.mocked(chainService.verifyTip);
 const CREATOR = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
 const TIPPER = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8";
 const TX = "0x" + "a".repeat(64);
+const TX2 = "0x" + "b".repeat(64);
 
 const confirmedTip: VerifiedTip = {
   status: "confirmed",
@@ -93,6 +95,39 @@ describe("POST /api/tips", () => {
 
     const creator = await Creator.findOne({ walletAddress: CREATOR }).lean();
     expect(creator!.stats!.tipCount).toBe(1);
+  });
+
+  it("does not double-count when the poller and a resubmit confirm at once", async () => {
+    await Creator.create({ walletAddress: CREATOR, username: "alice" });
+    // first submit lands while pending, then the tx mines
+    verifyTip.mockResolvedValueOnce(null);
+    await request(app).post("/api/tips").send({ txHash: TX });
+    verifyTip.mockResolvedValue(confirmedTip);
+
+    // background poller and a client resubmit race to confirm the same tip
+    await Promise.all([
+      confirmPendingTips(),
+      request(app).post("/api/tips").send({ txHash: TX }),
+    ]);
+
+    expect(await Tip.countDocuments({ txHash: TX })).toBe(1);
+    const creator = await Creator.findOne({ walletAddress: CREATOR }).lean();
+    expect(creator!.stats!.tipCount).toBe(1);
+    expect(creator!.stats!.totalReceivedWei).toBe("9750000000000000");
+  });
+
+  it("credits two different tips without losing an update", async () => {
+    await Creator.create({ walletAddress: CREATOR, username: "alice" });
+    verifyTip.mockResolvedValue(confirmedTip); // same creator/amount, different txHashes
+
+    await Promise.all([
+      request(app).post("/api/tips").send({ txHash: TX }),
+      request(app).post("/api/tips").send({ txHash: TX2 }),
+    ]);
+
+    const creator = await Creator.findOne({ walletAddress: CREATOR }).lean();
+    expect(creator!.stats!.tipCount).toBe(2);
+    expect(creator!.stats!.totalReceivedWei).toBe("19500000000000000"); // 2 × net
   });
 
   it("marks a reverted tx as failed", async () => {

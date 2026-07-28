@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { Creator } from "../models/Creator";
 import { Tip } from "../models/Tip";
 import { HttpError } from "../middleware/errorHandler";
+import * as chainService from "../services/chainService";
 
 const MAX_PAGE_SIZE = 50;
 
@@ -9,6 +10,17 @@ export async function createCreator(req: Request, res: Response, next: NextFunct
   try {
     const walletAddress = (req.body.walletAddress as string).toLowerCase();
     const { username, bio = "", avatarUrl = "" } = req.body;
+
+    // Ownership gate: the profile can only be created by the wallet that
+    // actually registered this username on-chain (registerCreator uses
+    // msg.sender), preventing wallet spoofing and username squatting.
+    const onChain = await chainService.getOnChainCreator(walletAddress);
+    if (!onChain.isActive) {
+      throw new HttpError(403, "Register on-chain before creating a profile.");
+    }
+    if (onChain.username !== username) {
+      throw new HttpError(409, "Username doesn't match your on-chain registration.");
+    }
 
     const existing = await Creator.findOne({
       $or: [{ walletAddress }, { username }],
@@ -72,7 +84,15 @@ export async function getCreatorStats(req: Request, res: Response, next: NextFun
       {
         $group: {
           _id: null,
-          totalWei: { $sum: { $toDecimal: "$amountWei" } },
+          // net received (amount − fee), matching Creator.stats and on-chain totalReceived
+          totalWei: {
+            $sum: {
+              $subtract: [
+                { $toDecimal: "$amountWei" },
+                { $toDecimal: { $ifNull: ["$feeWei", "0"] } },
+              ],
+            },
+          },
           tipCount: { $sum: 1 },
           uniqueTippers: { $addToSet: "$fromAddress" },
         },

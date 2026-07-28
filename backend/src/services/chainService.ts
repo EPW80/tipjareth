@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { Interface, JsonRpcProvider } from "ethers";
+import { Contract, Interface, JsonRpcProvider } from "ethers";
 import { env } from "../config/env";
 import { logger } from "../config/logger";
 
 const TIP_JAR_ABI = [
   "event TipReceived(address indexed from, address indexed creator, uint256 amount, uint256 fee, string message, bool isAnonymous)",
+  "function getCreator(address creatorAddress) view returns (tuple(string username, bool isActive, uint256 balance, uint256 totalReceived, uint256 tipCount))",
 ];
 
 const tipJarInterface = new Interface(TIP_JAR_ABI);
@@ -26,6 +27,23 @@ let provider: JsonRpcProvider | undefined;
 function getProvider(): JsonRpcProvider {
   if (!provider) provider = new JsonRpcProvider(env.rpcUrl);
   return provider;
+}
+
+export interface OnChainCreator {
+  username: string;
+  isActive: boolean;
+}
+
+/**
+ * Read a creator's on-chain registration. Because only the wallet owner can
+ * call `registerCreator` (msg.sender), an active record with a matching
+ * username proves the caller controls `address` — used to gate profile
+ * creation against spoofing/squatting.
+ */
+export async function getOnChainCreator(address: string): Promise<OnChainCreator> {
+  const contract = new Contract(getTipJarAddress(), TIP_JAR_ABI, getProvider());
+  const c = await contract.getCreator(address);
+  return { username: c.username as string, isActive: c.isActive as boolean };
 }
 
 export function getTipJarAddress(): string {
